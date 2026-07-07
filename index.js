@@ -1,82 +1,204 @@
 const express = require("express");
 const cors = require("cors");
 const { Resend } = require("resend");
+const admin = require("firebase-admin");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(
+  process.env.RESEND_API_KEY
+);
+
+const serviceAccount = JSON.parse(
+  process.env.FIREBASE_SERVICE_ACCOUNT
+);
+
+admin.initializeApp({
+
+  credential:
+    admin.credential.cert(serviceAccount)
+
+});
+
+const db = admin.firestore();
 
 app.get("/", (req, res) => {
-  res.send("TabibiQ Server Running");
+
+  res.send(
+    "TabibiQ Server Running"
+  );
+
 });
 
-app.post("/send-email", async (req, res) => {
-  try {
+app.post(
+  "/send-email",
 
-    const { email, name, link } = req.body;
+  async (req, res) => {
 
-    const response = await resend.emails.send({
+    try {
 
-      from: "TabibiQ <verify@tabibiq.org>",
+      const {
 
-      to: email,
+        email,
+        name,
+        link
 
-      subject: "تفعيل حسابك في TabibiQ",
+      } = req.body;
 
-      html: `
-      <div style="font-family:Arial;padding:30px">
+      const response =
+        await resend.emails.send({
 
-        <h1 style="color:#08AED3">
-          TabibiQ
-        </h1>
+          from:
+            "TabibiQ <verify@tabibiq.org>",
 
-        <h3>
-          مرحباً ${name}
-        </h3>
+          to: email,
 
-        <p>
-          اضغط الزر التالي لتفعيل حسابك
-        </p>
+          subject:
+            "تفعيل حسابك في TabibiQ",
 
-        <a
-          href="${link}"
-          style="
-          background:#08AED3;
-          color:white;
-          padding:15px 25px;
-          border-radius:10px;
-          text-decoration:none;
-          display:inline-block;
-          "
-        >
+          html: `
 
-          تفعيل الحساب
+<div style="font-family:Arial;padding:30px">
 
-        </a>
+<h1 style="color:#08AED3">
 
-      </div>
-      `
+TabibiQ
 
-    });
+</h1>
 
-    res.json(response);
+<h3>
 
-  } catch (error) {
+مرحباً ${name}
 
-    console.log(error);
+</h3>
 
-    res.status(500).json(error);
+<p>
+
+اضغط الزر التالي لتفعيل حسابك
+
+</p>
+
+<a
+
+href="${link}"
+
+style="
+
+background:#08AED3;
+
+color:white;
+
+padding:15px 25px;
+
+border-radius:10px;
+
+text-decoration:none;
+
+display:inline-block;
+
+"
+
+>
+
+تفعيل الحساب
+
+</a>
+
+</div>
+
+`
+
+        });
+
+      res.json(response);
+
+    }
+
+    catch (error) {
+
+      console.log(error);
+
+      res.status(500).json(error);
+
+    }
 
   }
-});
 
-const PORT = process.env.PORT || 3000;
+);
 
-app.listen(PORT, () => {
+app.get(
+  "/verify/:uid",
 
-  console.log(`Server running on port ${PORT}`);
+  async (req, res) => {
 
-});
+    try {
+
+      const uid =
+        req.params.uid;
+
+      await db
+        .collection("patients")
+        .doc(uid)
+        .update({
+
+          emailVerified:
+            true
+
+        });
+
+      res.send(`
+
+<h2>
+
+تم تفعيل الحساب بنجاح
+
+</h2>
+
+<p>
+
+يمكنك العودة إلى التطبيق الآن
+
+</p>
+
+`);
+
+    }
+
+    catch (error) {
+
+      console.log(error);
+
+      res.status(500)
+        .send(
+
+          "حدث خطأ أثناء التفعيل"
+
+        );
+
+    }
+
+  }
+
+);
+
+const PORT =
+  process.env.PORT || 3000;
+
+app.listen(
+
+  PORT,
+
+  () => {
+
+    console.log(
+
+      `Server running on port ${PORT}`
+
+    );
+
+  }
+
+);
