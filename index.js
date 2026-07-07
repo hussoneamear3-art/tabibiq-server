@@ -20,7 +20,7 @@ app.post("/send-email", async (req, res) => {
 
     const response = await resend.emails.send({
 
-      from: "TabibiQ <onboarding@resend.dev>",
+      from: "TabibiQ <verify@tabibiq.org>",
 
       to: email,
 
@@ -29,32 +29,33 @@ app.post("/send-email", async (req, res) => {
       html: `
       <div style="font-family:Arial;padding:30px">
 
-      <h1 style="color:#08AED3">
-      TabibiQ
-      </h1>
+        <h1 style="color:#08AED3">
+          TabibiQ
+        </h1>
 
-      <h3>
-      مرحباً ${name}
-      </h3>
+        <h3>
+          مرحباً ${name}
+        </h3>
 
-      <p>
-      اضغط الزر لتفعيل الحساب
-      </p>
+        <p>
+          اضغط الزر التالي لتفعيل حسابك
+        </p>
 
-      <a
-      href="${link}"
-      style="
-      background:#08AED3;
-      color:white;
-      padding:15px 25px;
-      border-radius:10px;
-      text-decoration:none;
-      display:inline-block;
-      ">
+        <a
+          href="${link}"
+          style="
+          background:#08AED3;
+          color:white;
+          padding:15px 25px;
+          border-radius:10px;
+          text-decoration:none;
+          display:inline-block;
+          "
+        >
 
-      تفعيل الحساب
+          تفعيل الحساب
 
-      </a>
+        </a>
 
       </div>
       `
