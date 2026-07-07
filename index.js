@@ -35,6 +35,7 @@ app.get("/", (req, res) => {
 
 });
 
+
 app.post(
 
 "/send-email",
@@ -50,6 +51,7 @@ name,
 link
 
 }=req.body;
+
 
 const response = await resend.emails.send({
 
@@ -145,6 +147,8 @@ res.status(500)
 
 );
 
+
+
 app.get(
 
 "/verify/:uid",
@@ -155,6 +159,7 @@ try{
 
 const uid = req.params.uid;
 
+
 const patient = await db
 
 .collection("patients")
@@ -162,6 +167,8 @@ const patient = await db
 .doc(uid)
 
 .get();
+
+
 
 if(patient.exists){
 
@@ -177,11 +184,12 @@ emailVerified:true
 
 });
 
+
 return res.send(`
 
 <h2>
 
-تم تفعيل الحساب بنجاح
+تم تفعيل حساب المريض بنجاح
 
 </h2>
 
@@ -195,6 +203,8 @@ return res.send(`
 
 }
 
+
+
 const doctor = await db
 
 .collection("doctors")
@@ -202,6 +212,8 @@ const doctor = await db
 .doc(uid)
 
 .get();
+
+
 
 if(doctor.exists){
 
@@ -217,11 +229,12 @@ emailVerified:true
 
 });
 
+
 return res.send(`
 
 <h2>
 
-تم تفعيل الحساب بنجاح
+تم تفعيل حساب الطبيب بنجاح
 
 </h2>
 
@@ -234,6 +247,7 @@ return res.send(`
 `);
 
 }
+
 
 res.status(404)
 
@@ -263,9 +277,13 @@ res.status(500)
 
 );
 
+
+
 const PORT =
 
 process.env.PORT || 3000;
+
+
 
 app.listen(
 
