@@ -19,7 +19,9 @@ const serviceAccount = JSON.parse(
 admin.initializeApp({
 
   credential:
-    admin.credential.cert(serviceAccount)
+    admin.credential.cert(
+      serviceAccount
+    )
 
 });
 
@@ -34,36 +36,46 @@ app.get("/", (req, res) => {
 });
 
 app.post(
-  "/send-email",
 
-  async (req, res) => {
+"/send-email",
 
-    try {
+async (req,res)=>{
 
-      const {
+try{
 
-        email,
-        name,
-        link
+const{
 
-      } = req.body;
+email,
+name,
+link
 
-      const response =
-        await resend.emails.send({
+}=req.body;
 
-          from:
-            "TabibiQ <verify@tabibiq.org>",
+const response = await resend.emails.send({
 
-          to: email,
+from:
 
-          subject:
-            "تفعيل حسابك في TabibiQ",
+"TabibiQ <verify@tabibiq.org>",
 
-          html: `
+to:email,
 
-<div style="font-family:Arial;padding:30px">
+subject:
 
-<h1 style="color:#08AED3">
+"تفعيل حسابك في TabibiQ",
+
+html:`
+
+<div
+style="
+font-family:Arial;
+padding:30px;
+text-align:center;
+">
+
+<h1
+style="
+color:#08AED3;
+">
 
 TabibiQ
 
@@ -99,6 +111,8 @@ text-decoration:none;
 
 display:inline-block;
 
+margin-top:20px;
+
 "
 
 >
@@ -111,45 +125,59 @@ display:inline-block;
 
 `
 
-        });
+});
 
-      res.json(response);
+res.json(response);
 
-    }
+}
 
-    catch (error) {
+catch(error){
 
-      console.log(error);
+console.log(error);
 
-      res.status(500).json(error);
+res.status(500)
 
-    }
+.json(error);
 
-  }
+}
+
+}
 
 );
 
 app.get(
-  "/verify/:uid",
 
-  async (req, res) => {
+"/verify/:uid",
 
-    try {
+async(req,res)=>{
 
-      const uid =
-        req.params.uid;
+try{
 
-      await db
-        .collection("patients")
-        .doc(uid)
-        .update({
+const uid = req.params.uid;
 
-          emailVerified:
-            true
+const patient = await db
 
-        });
+.collection("patients")
 
-      res.send(`
+.doc(uid)
+
+.get();
+
+if(patient.exists){
+
+await db
+
+.collection("patients")
+
+.doc(uid)
+
+.update({
+
+emailVerified:true
+
+});
+
+return res.send(`
 
 <h2>
 
@@ -159,46 +187,98 @@ app.get(
 
 <p>
 
-يمكنك العودة إلى التطبيق الآن
+يمكنك العودة إلى تطبيق TabibiQ
 
 </p>
 
 `);
 
-    }
+}
 
-    catch (error) {
+const doctor = await db
 
-      console.log(error);
+.collection("doctors")
 
-      res.status(500)
-        .send(
+.doc(uid)
 
-          "حدث خطأ أثناء التفعيل"
+.get();
 
-        );
+if(doctor.exists){
 
-    }
+await db
 
-  }
+.collection("doctors")
+
+.doc(uid)
+
+.update({
+
+emailVerified:true
+
+});
+
+return res.send(`
+
+<h2>
+
+تم تفعيل الحساب بنجاح
+
+</h2>
+
+<p>
+
+يمكنك العودة إلى تطبيق TabibiQ
+
+</p>
+
+`);
+
+}
+
+res.status(404)
+
+.send(
+
+"الحساب غير موجود"
+
+);
+
+}
+
+catch(error){
+
+console.log(error);
+
+res.status(500)
+
+.send(
+
+"حدث خطأ أثناء التفعيل"
+
+);
+
+}
+
+}
 
 );
 
 const PORT =
-  process.env.PORT || 3000;
+
+process.env.PORT || 3000;
 
 app.listen(
 
-  PORT,
+PORT,
 
-  () => {
+()=>{
 
-    console.log(
+console.log(
 
-      `Server running on port ${PORT}`
+`Server running on port ${PORT}`
 
-    );
+);
 
-  }
+}
 
 );
