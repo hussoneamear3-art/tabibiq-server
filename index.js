@@ -1,44 +1,81 @@
-const functions = require("firebase-functions");
-const {Resend} = require("resend");
+const express = require("express");
+const cors = require("cors");
+const { Resend } = require("resend");
 
-const resend = new Resend(functions.config().resend.key);
+const app = express();
 
-exports.sendVerificationEmail = functions.https.onCall(async (data) => {
-  const email = data.email;
-  const name = data.name;
-  const link = data.link;
+app.use(cors());
+app.use(express.json());
 
-  await resend.emails.send({
-    from: "TabibiQ <verify@tabibiq.org>",
-    to: email,
-    subject: "تفعيل حسابك في TabibiQ",
-    html: `
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+app.get("/", (req, res) => {
+  res.send("TabibiQ Server Running");
+});
+
+app.post("/send-email", async (req, res) => {
+  try {
+
+    const { email, name, link } = req.body;
+
+    const response = await resend.emails.send({
+
+      from: "TabibiQ <onboarding@resend.dev>",
+
+      to: email,
+
+      subject: "تفعيل حسابك في TabibiQ",
+
+      html: `
       <div style="font-family:Arial;padding:30px">
-        <h1 style="color:#08AED3;">TabibiQ</h1>
 
-        <h3>مرحباً ${name}</h3>
+      <h1 style="color:#08AED3">
+      TabibiQ
+      </h1>
 
-        <p>اضغط الزر لتفعيل حسابك</p>
+      <h3>
+      مرحباً ${name}
+      </h3>
 
-        <a
-          href="${link}"
-          style="
-            background:#08AED3;
-            color:white;
-            padding:15px 25px;
-            text-decoration:none;
-            border-radius:10px;
-            display:inline-block;
-          "
-        >
-          تفعيل الحساب
-        </a>
+      <p>
+      اضغط الزر لتفعيل الحساب
+      </p>
+
+      <a
+      href="${link}"
+      style="
+      background:#08AED3;
+      color:white;
+      padding:15px 25px;
+      border-radius:10px;
+      text-decoration:none;
+      display:inline-block;
+      ">
+
+      تفعيل الحساب
+
+      </a>
 
       </div>
-    `,
-  });
+      `
 
-  return {
-    success: true,
-  };
+    });
+
+    res.json(response);
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json(error);
+
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+
+  console.log(`Server running on port ${PORT}`);
+
 });
