@@ -340,7 +340,89 @@ app.post("/send-password-reset", async (req, res) => {
     });
   }
 });
+app.post("/reset-password", async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
 
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing data",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters",
+      });
+    }
+
+    // قراءة رمز OTP
+    const otpDoc = await db
+      .collection("password_reset")
+      .doc(email)
+      .get();
+
+    if (!otpDoc.exists) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP not found",
+      });
+    }
+
+    const data = otpDoc.data();
+
+    if (data.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    // انتهاء الصلاحية
+    const createdAt = data.createdAt.toDate();
+
+    const diff =
+        (Date.now() - createdAt.getTime()) / 60000;
+
+    if (diff > 10) {
+
+      await otpDoc.ref.delete();
+
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired",
+      });
+    }
+
+    // البحث عن المستخدم بالإيميل
+    const user =
+        await admin.auth().getUserByEmail(email);
+
+    // تغيير كلمة المرور
+    await admin.auth().updateUser(user.uid, {
+      password: newPassword,
+    });
+
+    // حذف OTP
+    await otpDoc.ref.delete();
+
+    res.json({
+      success: true,
+      message: "Password changed successfully",
+    });
+
+  } catch (e) {
+
+    console.log(e);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+});
 const PORT =
 
 process.env.PORT || 3000;
