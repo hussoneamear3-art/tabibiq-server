@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { Resend } = require("resend");
 const admin = require("firebase-admin");
-
+const crypto = require("crypto");
 const app = express();
 
 app.use(cors());
@@ -276,8 +276,70 @@ res.status(500)
 }
 
 );
+app.post("/send-password-reset", async (req, res) => {
+  try {
+    const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
 
+    const resetLink = await admin
+      .auth()
+      .generatePasswordResetLink(email);
+
+    await resend.emails.send({
+      from: "TabibiQ <verify@tabibiq.org>",
+      to: email,
+      subject: "إعادة تعيين كلمة المرور - TabibiQ",
+      html: `
+      <div style="font-family:Arial;padding:30px;text-align:center">
+        <h1 style="color:#08AED3;">TabibiQ</h1>
+
+        <h2>إعادة تعيين كلمة المرور</h2>
+
+        <p>
+          اضغط الزر التالي لإعادة تعيين كلمة المرور.
+        </p>
+
+        <a
+          href="${resetLink}"
+          style="
+            background:#08AED3;
+            color:white;
+            padding:15px 25px;
+            border-radius:10px;
+            text-decoration:none;
+            display:inline-block;
+            margin-top:20px;
+          "
+        >
+          إعادة تعيين كلمة المرور
+        </a>
+
+        <p style="margin-top:25px;color:#666;">
+          إذا لم تطلب إعادة تعيين كلمة المرور فتجاهل هذه الرسالة.
+        </p>
+      </div>
+      `,
+    });
+
+    res.json({
+      success: true,
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 const PORT =
 
